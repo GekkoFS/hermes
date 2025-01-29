@@ -294,52 +294,12 @@ public:
 
         lookup_ctx ctx(m_hg_class);
 
-        hg_return_t ret = HG_Addr_lookup(
-            // Mercury execution context
-            const_cast<hg_context_t*>(m_hg_context),
-            // pointer to callback
-            [](const struct hg_cb_info* cbi) -> hg_return_t {
-
-                auto* ctx = static_cast<lookup_ctx*>(cbi->arg);
-
-                ctx->m_lookup_finished = true;
-                ctx->m_hg_addr = cbi->info.lookup.addr;
-                ctx->m_hg_ret = cbi->ret;
-
-                if(cbi->ret != HG_SUCCESS) {
-                    return cbi->ret;
-                }
-
-                return HG_SUCCESS;
-            },
-            // pointer to data passed to callback
-            //static_cast<void*>(ctx.get()),
-            static_cast<void*>(&ctx),
-            // name to lookup
-            transport_address.c_str(),
-            // pointer to returned operation ID
-            HG_OP_ID_IGNORE);
-
-        HERMES_DEBUG2("HG_Addr_lookup({}, {}, {}, {}, HG_OP_ID_IGNORE) = {}", 
-                      fmt::ptr(m_hg_context), "foo", fmt::ptr(&ctx), 
-                      transport_address, HG_Error_to_string(ret));
+        hg_return_t ret = HG_Addr_lookup2(m_hg_class, addr.c_str(), &ctx.m_hg_addr);
 
         if(ret != HG_SUCCESS) {
             throw std::runtime_error(HG_Error_to_string(ret));
         }
 
-        ret = wait_on(ctx);
-
-        if(ret != HG_SUCCESS) {
-            HERMES_DEBUG("Lookup request failed");
-            throw std::runtime_error(HG_Error_to_string(ret));
-        }
-
-        assert(ctx.m_lookup_finished);
-        HERMES_DEBUG("Lookup request succeeded [hg_addr: {}]",
-                     fmt::ptr(ctx.m_hg_addr));
-
-        
         std::pair<decltype(m_address_cache)::iterator, bool> rv;
 
         {

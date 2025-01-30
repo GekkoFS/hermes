@@ -691,7 +691,7 @@ private:
                     !m_shutdown);
 
             if(!m_shutdown) {
-                ret = HG_Progress(m_hg_context, 100);
+                ret = HG_Progress(m_hg_context, 1);
 
                 HERMES_DEBUG4("HG_Progress(context={}, timeout={}) = {}", 
                               fmt::ptr(m_hg_context), 100, 
